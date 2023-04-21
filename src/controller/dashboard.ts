@@ -56,7 +56,7 @@ export function loadDashboardController(app: Express) {
     });
   });
 
-  app.get(`/${CONTROLLER}/dueSoonBills`, async (_, response) => {
+  app.get(`/${CONTROLLER}/getDueSoonBills`, async (_, response) => {
     const bills = [
       { type: 'Conta de Luz', value: 400, dueDate: new Date(2023, 4, 1) },
       { type: 'Conta de Água', value: 100, dueDate: new Date(2023, 4, 10) },
@@ -66,7 +66,7 @@ export function loadDashboardController(app: Express) {
     response.send(bills);
   });
 
-  app.get(`/${CONTROLLER}/monthlyBalances`, async (_, response) => {
+  app.get(`/${CONTROLLER}/getMonthlyBalances`, async (_, response) => {
     const monthlyBalance = [
       { balance: 20000, month: new Date(2022, 1) },
       { balance: 30000, month: new Date(2022, 2) },
@@ -83,7 +83,7 @@ export function loadDashboardController(app: Express) {
     response.send(monthlyBalance);
   });
 
-  app.get(`/${CONTROLLER}/monthlyDebts`, async (_, response) => {
+  app.get(`/${CONTROLLER}/getMonthlyDebts`, async (_, response) => {
     const monthlyDebts = [
       { debt: 10000, month: new Date(2022, 1) },
       { debt: 20000, month: new Date(2022, 2) },
@@ -100,7 +100,7 @@ export function loadDashboardController(app: Express) {
     response.send(monthlyDebts);
   });
 
-  app.get(`/${CONTROLLER}/monthlyEntries`, async (_, response) => {
+  app.get(`/${CONTROLLER}/getMonthlyEntries`, async (_, response) => {
     const monthlyEntries = [
       { earnings: 11000, expenses: 7000, month: new Date(2022, 1) },
       { earnings: 12000, expenses: 8000, month: new Date(2022, 2) },
@@ -117,7 +117,7 @@ export function loadDashboardController(app: Express) {
     response.send(monthlyEntries.map(e => ({ ...e, netEarnings: e.earnings - e.expenses })));
   });
 
-  app.get(`/${CONTROLLER}/monthlyStocks`, async (_, response) => {
+  app.get(`/${CONTROLLER}/getMonthlyStocks`, async (_, response) => {
     const monthlyStocks = [
       { stocks: 70000, month: new Date(2022, 1) },
       { stocks: 80000, month: new Date(2022, 2) },
