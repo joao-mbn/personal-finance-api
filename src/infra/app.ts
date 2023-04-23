@@ -3,7 +3,7 @@ import * as express from 'express';
 import { Express } from 'express';
 import { env } from 'process';
 import { serve, setup } from 'swagger-ui-express';
-import { loadDashboardController } from '../controller';
+import { loadAuthController, loadDashboardController } from '../controller';
 import * as swaggerDocument from './swagger.json';
 
 export function initApp() {
@@ -24,5 +24,6 @@ export function initApp() {
 }
 
 function loadControllers(app: Express) {
+  loadAuthController(app);
   loadDashboardController(app);
 }
