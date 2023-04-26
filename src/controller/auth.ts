@@ -1,5 +1,6 @@
 import { Express, Request } from 'express';
 import { OAuth2Client } from 'google-auth-library';
+import { upsertUserWithGooglePayload } from '.';
 
 export function loadAuthController(app: Express) {
   const CONTROLLER = 'auth';
@@ -7,14 +8,21 @@ export function loadAuthController(app: Express) {
 
   app.post(`/${CONTROLLER}/google`, async (request: Request<{}, {}, { tokenId: string }>, response) => {
     const client = new OAuth2Client(FRONT_END_CLIENT_ID);
+
     async function verify() {
       const ticket = await client.verifyIdToken({
         idToken: request.body.tokenId,
         audience: FRONT_END_CLIENT_ID,
       });
+
       const payload = ticket.getPayload();
-      const userid = payload?.['sub'];
+
+      if (payload) {
+        const { name, email } = await upsertUserWithGooglePayload(payload);
+        response.send({ name, email });
+      }
     }
+
     verify().catch(console.error);
   });
 }
