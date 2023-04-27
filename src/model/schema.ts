@@ -10,8 +10,26 @@ const entrySchema = new Schema({
   value: { type: Decimal128, require: true },
   isExpense: { type: Boolean, require: true },
 });
-
 export const Entry = model('Entry', entrySchema, 'entries');
+
+const debtSchema = new Schema({
+  type: { type: String, required: true },
+  value: { type: Decimal128, required: true },
+  dueDate: { type: Date, required: true },
+});
+export const Debt = model('Debt', debtSchema);
+
+const accountSchema: Schema = new Schema({
+  name: { type: String, required: true },
+  value: { type: Decimal128, required: true },
+  isNegative: { type: Boolean, required: true },
+});
+
+const titleSchema: Schema = new Schema({
+  name: { type: String, required: true },
+  type: { type: String, required: true },
+  value: { type: Decimal128, required: true },
+});
 
 const userSchema = new Schema({
   googleId: { type: String, required: true, unique: true },
@@ -21,13 +39,8 @@ const userSchema = new Schema({
   picture: String,
   email: String,
   createdAt: { type: Date, default: Date.now() },
-  accounts: [
-    {
-      Name: String,
-      Value: Decimal128,
-      isNegative: Boolean,
-    },
-  ],
+  accounts: [accountSchema],
+  titles: [titleSchema],
   debts: [ObjectId],
   entries: [ObjectId],
 });
