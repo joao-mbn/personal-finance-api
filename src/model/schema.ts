@@ -1,12 +1,11 @@
 import { Document, Schema, Types, model } from 'mongoose';
 
-interface IEntry extends Document {
+export interface IEntry extends Document {
   comments: string;
   target: string;
   timestamp: Date;
   type: string;
   value: number;
-  isExpense: boolean;
 }
 
 const entrySchema = new Schema<IEntry>({
@@ -15,26 +14,27 @@ const entrySchema = new Schema<IEntry>({
   timestamp: { type: Date, required: true },
   type: { type: String, required: true },
   value: { type: Number, required: true },
-  isExpense: { type: Boolean, required: true },
 });
 
 export const Entry = model<IEntry>('Entry', entrySchema, 'entries');
 
-interface IDebt extends Document {
-  type: string;
+export interface IDebt extends Document {
+  name: string;
   value: number;
   dueDate: Date;
+  isPaid: boolean;
 }
 
 const debtSchema = new Schema<IDebt>({
-  type: { type: String, required: true },
+  name: { type: String, required: true },
   value: { type: Number, required: true },
   dueDate: { type: Date, required: true },
+  isPaid: { type: Boolean, required: true, default: false },
 });
 
 export const Debt = model<IDebt>('Debt', debtSchema);
 
-interface IAccount extends Document {
+export interface IAccount extends Document {
   name: string;
   value: number;
   isNegative: boolean;
@@ -43,10 +43,9 @@ interface IAccount extends Document {
 const accountSchema = new Schema<IAccount>({
   name: { type: String, required: true },
   value: { type: Number, required: true },
-  isNegative: { type: Boolean, required: true },
 });
 
-interface ITitle extends Document {
+export interface ITitle extends Document {
   name: string;
   type: string;
   value: number;
@@ -58,7 +57,7 @@ const titleSchema = new Schema<ITitle>({
   value: { type: Number, required: true },
 });
 
-interface IUser extends Document {
+export interface IUser extends Document {
   googleId: string;
   name?: string;
   familyName?: string;

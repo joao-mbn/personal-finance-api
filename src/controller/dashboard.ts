@@ -1,8 +1,10 @@
 import { Express } from 'express';
-import { DashboardWidget, Entry } from '../model';
+import { ObjectId } from 'mongodb';
+import { DashboardWidget, IDebt, User } from '../model';
 
 export function loadDashboardController(app: Express) {
   const CONTROLLER = 'dashboard';
+  const USER_ID = '6449ca2830942603c86b90d2';
 
   app.get(`/${CONTROLLER}/getWidgets`, async (_, response) => {
     response.send([
@@ -16,121 +18,211 @@ export function loadDashboardController(app: Express) {
     ]);
   });
 
-  app.get(`/${CONTROLLER}/getAll`, async (_, response) => {
-    const entries = (await Entry.find()).map(({ _id, comments, isExpense, target, timestamp, type, value }) => ({
-      id: _id,
-      type,
-      target,
-      value: isExpense ? -Number(value) : Number(value),
-      comments,
-      timestamp,
-    }));
-    response.send(entries);
+  app.get(`/${CONTROLLER}/getBalances`, async (request, response) => {
+    const userId = USER_ID;
+    const user = await User.findById(userId);
+
+    if (!user) {
+      response.status(404).send('User not found.');
+      return;
+    }
+
+    const balances = user.accounts.map(({ name, value }) => ({ name, value }));
+    const totalBalance = balances.reduce((total, { value }) => total + value, 0);
+
+    response.send({ totalBalance, balances });
   });
 
-  app.get(`/${CONTROLLER}/getBalances`, async (_, response) => {
-    const balancePerTarget = [
-      { target: 'Banco A', value: 5000 },
-      { target: 'Banco B', value: 2500 },
-      { target: 'Ações', value: 30000 },
-      { target: 'CDB', value: 20000 },
-      { target: 'Debêntures', value: 20000 },
-      { target: 'Papel', value: 1000 },
-    ];
-    response.send({
-      totalBalance: balancePerTarget.reduce((acc, curr) => acc + curr.value, 0),
-      balancePerTarget,
-    });
+  app.get(`/${CONTROLLER}/getDebts`, async (request, response) => {
+    const userId = USER_ID;
+    const user = await User.findById(userId).populate<{ debts: IDebt[] }>('debts');
+
+    if (!user) {
+      response.status(404).send('User not found.');
+      return;
+    }
+
+    const debts = user?.debts.map(({ name, value }) => ({ name, value }));
+    const totalDebts = debts.reduce((total, { value }) => total + value, 0);
+
+    response.send({ totalDebts, debts });
   });
 
-  app.get(`/${CONTROLLER}/getDebts`, async (_, response) => {
-    const debtsPerTarget = [
-      { target: 'Banco A', value: 5000 },
-      { target: 'Banco B', value: 2500 },
-      { target: 'Agiota', value: 30000 },
-      { target: 'Milícia', value: 20000 },
-    ];
-    response.send({
-      totalDebts: debtsPerTarget.reduce((acc, curr) => acc + curr.value, 0),
-      debtsPerTarget,
-    });
-  });
+  app.get(`/${CONTROLLER}/getDueSoonBills`, async (request, response) => {
+    const startDate = new Date();
+    const endDate = new Date(startDate);
+    endDate.setMonth(startDate.getMonth() + 3);
 
-  app.get(`/${CONTROLLER}/getDueSoonBills`, async (_, response) => {
-    const bills = [
-      { type: 'Conta de Luz', value: 400, dueDate: new Date(2023, 4, 1) },
-      { type: 'Conta de Água', value: 100, dueDate: new Date(2023, 4, 10) },
-      { type: 'Fatura do Cartão final **** 1234', value: 600, dueDate: new Date(2023, 4, 5) },
-      { type: 'Condomínio', value: 600, dueDate: new Date(2023, 4, 2) },
-    ];
-    response.send(bills);
+    const userId = USER_ID;
+
+    const debts = await User.aggregate<IDebt>([
+      { $match: { _id: new ObjectId(userId) } },
+      {
+        $lookup: {
+          from: 'debts',
+          localField: 'debts',
+          foreignField: '_id',
+          as: 'debts',
+        },
+      },
+      { $unwind: '$debts' },
+      { $project: { name: '$debts.name', value: '$debts.value', dueDate: '$debts.dueDate', isPaid: '$debts.isPaid' } },
+      {
+        $match: {
+          $or: [{ dueDate: { $gte: startDate, $lt: endDate } }, { dueDate: { $lt: startDate }, isPaid: false }],
+        },
+      },
+      { $sort: { dueDate: -1 } },
+      { $set: { dueDate: { $dateToString: { format: '%d/%m/%Y', date: '$dueDate' } } } },
+    ]);
+
+    response.send(debts);
   });
 
   app.get(`/${CONTROLLER}/getMonthlyBalances`, async (_, response) => {
-    const monthlyBalance = [
-      { balance: 20000, month: new Date(2022, 1) },
-      { balance: 30000, month: new Date(2022, 2) },
-      { balance: 40000, month: new Date(2022, 3) },
-      { balance: 50000, month: new Date(2022, 4) },
-      { balance: 60000, month: new Date(2022, 5) },
-      { balance: 70000, month: new Date(2022, 6) },
-      { balance: 80000, month: new Date(2022, 7) },
-      { balance: 90000, month: new Date(2022, 8) },
-      { balance: 100000, month: new Date(2022, 9) },
-      { balance: 110000, month: new Date(2022, 10) },
-      { balance: 120000, month: new Date(2022, 11) },
-    ];
-    response.send(monthlyBalance);
+    const endDate = new Date();
+    const startDate = new Date(endDate);
+    startDate.setMonth(endDate.getMonth() - 8);
+
+    const userId = USER_ID;
+
+    const balancesByMonth = (
+      await User.aggregate<{ _id: string; earnings: number; expenses: number; balance: number }>([
+        { $match: { _id: new ObjectId(userId) } },
+        { $addFields: { balance: { $sum: '$accounts.value' } } },
+        {
+          $lookup: {
+            from: 'entries',
+            localField: 'entries',
+            foreignField: '_id',
+            as: 'entries',
+          },
+        },
+        { $unwind: '$entries' },
+        { $match: { 'entries.timestamp': { $gte: startDate, $lte: endDate } } },
+        {
+          $project: {
+            _id: 0,
+            balance: 1,
+            timestamp: '$entries.timestamp',
+            value: '$entries.value',
+            isExpense: '$entries.isExpense',
+          },
+        },
+        {
+          $group: {
+            _id: { $dateToString: { format: '%m/%Y', date: '$timestamp' } },
+            earnings: { $sum: { $cond: [{ $gte: ['$value', 0] }, '$value', 0] } },
+            expenses: { $sum: { $cond: [{ $lt: ['$value', 0] }, '$value', 0] } },
+            balance: { $first: '$balance' },
+            timestamp: { $first: '$timestamp' },
+          },
+        },
+        { $sort: { timestamp: -1 } },
+      ])
+    ).reduce((acc: { month: string; balance: number }[], { _id: month, earnings, expenses, balance }, index) => {
+      const refBalance = index === 0 ? balance : acc[index - 1].balance;
+      return [...acc, { month, balance: refBalance - (earnings + expenses), expenses, earnings }];
+    }, []);
+
+    response.send(balancesByMonth);
   });
 
   app.get(`/${CONTROLLER}/getMonthlyDebts`, async (_, response) => {
-    const monthlyDebts = [
-      { debt: 10000, month: new Date(2022, 1) },
-      { debt: 20000, month: new Date(2022, 2) },
-      { debt: 30000, month: new Date(2022, 3) },
-      { debt: 40000, month: new Date(2022, 4) },
-      { debt: 50000, month: new Date(2022, 5) },
-      { debt: 60000, month: new Date(2022, 6) },
-      { debt: 70000, month: new Date(2022, 7) },
-      { debt: 80000, month: new Date(2022, 8) },
-      { debt: 90000, month: new Date(2022, 9) },
-      { debt: 100000, month: new Date(2022, 10) },
-      { debt: 110000, month: new Date(2022, 11) },
-    ];
-    response.send(monthlyDebts);
+    const endDate = new Date(2023, 6, 1);
+    const startDate = new Date(endDate);
+    startDate.setMonth(endDate.getMonth() - 8);
+
+    const userId = USER_ID;
+
+    const debts = await User.aggregate<{ debt: number; month: string }>([
+      { $match: { _id: new ObjectId(userId) } },
+      {
+        $lookup: {
+          from: 'debts',
+          localField: 'debts',
+          foreignField: '_id',
+          as: 'debts',
+        },
+      },
+      { $unwind: '$debts' },
+      { $project: { name: '$debts.name', value: '$debts.value', dueDate: '$debts.dueDate', isPaid: '$debts.isPaid' } },
+      {
+        $match: {
+          $or: [{ dueDate: { $gte: startDate, $lt: endDate } }, { dueDate: { $lt: startDate }, isPaid: false }],
+        },
+      },
+      {
+        $group: {
+          _id: { $dateToString: { format: '%m/%Y', date: '$dueDate' } },
+          debt: { $sum: '$value' },
+        },
+      },
+      { $sort: { id: 1 } },
+      { $addFields: { month: '$_id' } },
+    ]);
+
+    response.send(debts);
   });
 
-  app.get(`/${CONTROLLER}/getMonthlyEntries`, async (_, response) => {
-    const monthlyEntries = [
-      { earnings: 11000, expenses: 7000, month: new Date(2022, 1) },
-      { earnings: 12000, expenses: 8000, month: new Date(2022, 2) },
-      { earnings: 13000, expenses: 9000, month: new Date(2022, 3) },
-      { earnings: 14000, expenses: 10000, month: new Date(2022, 4) },
-      { earnings: 15000, expenses: 11000, month: new Date(2022, 5) },
-      { earnings: 16000, expenses: 12000, month: new Date(2022, 6) },
-      { earnings: 17000, expenses: 13000, month: new Date(2022, 7) },
-      { earnings: 18000, expenses: 14000, month: new Date(2022, 8) },
-      { earnings: 19000, expenses: 15000, month: new Date(2022, 9) },
-      { earnings: 20000, expenses: 16000, month: new Date(2022, 10) },
-      { earnings: 21000, expenses: 17000, month: new Date(2022, 11) },
-    ];
-    response.send(monthlyEntries.map(e => ({ ...e, netEarnings: e.earnings - e.expenses })));
+  app.get(`/${CONTROLLER}/getMonthlyEntries`, async (request, response) => {
+    const endDate = new Date();
+    const startDate = new Date(endDate);
+    startDate.setMonth(endDate.getMonth() - 8);
+
+    const userId = USER_ID;
+
+    const entriesByMonth = await User.aggregate<{
+      month: string;
+      earnings: number;
+      expenses: number;
+      netEarnings: number;
+    }>([
+      { $match: { _id: new ObjectId(userId) } },
+      {
+        $lookup: {
+          from: 'entries',
+          localField: 'entries',
+          foreignField: '_id',
+          as: 'entries',
+        },
+      },
+      { $unwind: '$entries' },
+      { $match: { 'entries.timestamp': { $gte: startDate, $lte: endDate } } },
+      {
+        $project: { _id: 0, timestamp: '$entries.timestamp', value: '$entries.value', isExpense: '$entries.isExpense' },
+      },
+      {
+        $group: {
+          _id: { $dateToString: { format: '%m/%Y', date: '$timestamp' } },
+          earnings: { $sum: { $cond: [{ $gte: ['$value', 0] }, '$value', 0] } },
+          expenses: { $sum: { $cond: [{ $lt: ['$value', 0] }, '$value', 0] } },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          month: '$_id',
+          earnings: 1,
+          expenses: 1,
+          netEarnings: { $add: ['$earnings', '$expenses'] },
+        },
+      },
+    ]);
+
+    response.send(entriesByMonth);
   });
 
-  app.get(`/${CONTROLLER}/getMonthlyStocks`, async (_, response) => {
-    const monthlyStocks = [
-      { stocks: 70000, month: new Date(2022, 1) },
-      { stocks: 80000, month: new Date(2022, 2) },
-      { stocks: 90000, month: new Date(2022, 3) },
-      { stocks: 100000, month: new Date(2022, 4) },
-      { stocks: 110000, month: new Date(2022, 5) },
-      { stocks: 120000, month: new Date(2022, 6) },
-      { stocks: 130000, month: new Date(2022, 7) },
-      { stocks: 140000, month: new Date(2022, 8) },
-      { stocks: 150000, month: new Date(2022, 9) },
-      { stocks: 160000, month: new Date(2022, 10) },
-      { stocks: 170000, month: new Date(2022, 11) },
-    ];
-    response.send(monthlyStocks);
+  app.get(`/${CONTROLLER}/getAssets`, async (_, response) => {
+    const userId = USER_ID;
+
+    const assets = await User.aggregate<{ type: string; value: number }>([
+      { $match: { _id: new ObjectId(userId) } },
+      { $unwind: '$titles' },
+      { $project: { _id: 0, name: '$titles.name', value: '$titles.value', type: '$titles.type' } },
+      { $group: { _id: '$type', value: { $sum: '$value' } } },
+    ]);
+
+    response.send(assets);
   });
 }
