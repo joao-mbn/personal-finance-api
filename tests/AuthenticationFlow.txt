@@ -1,0 +1,48 @@
+Auth tests:
+- *Test flow with two users at the same time
+
+- [x] Clear cache, enter without sessionId
+  - [x] See that request for widget fails
+  - [x] See that endpoint to get redirect uri is successful
+
+- Click on redirect uri
+  - [x] Consent
+  - [x] See that it reaches auth/google
+
+- Test auth/google
+  - [x] mock invalid code
+    - see that getToken fails
+
+  - [x] mock token id as undefined
+    - see that no id token error is thrown
+
+  - [x] mock invalid token id getToken
+    - see that verifyIdTokenFails
+
+  - [x] mock payload as undefined
+    - see that it throws an error
+
+  - [x] let it go
+    - see that new session id is stored in a cookie
+    - see that payload, token and session get stored in db
+    - see that i'm redirect back to base url of front-endpoint
+
+- [x] Mock a fake sessionId
+  - See that user does not get found and a error is thrown
+
+- [x] Request again and see, within due time of the session
+  - See that session expiry date is updated
+  - See that you're auth'd
+
+- [x] With an expired session, mock refresh token as undefined
+  - See that you're prompted to renew the session
+
+- [x] With an expired session and the unmocked refresh token stored
+  - See refresh token request on google is successful
+  - See that session expiry date is updated
+
+- [x] With an expired session and a invalid refresh token
+  - Remove app's granted permission at https://myaccount.google.com/permissions
+    - so to invalidate the refresh token
+  - See refresh token request on google is fails
+  - See that session and token are removed from the user

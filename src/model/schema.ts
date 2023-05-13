@@ -1,5 +1,4 @@
 import { Document, Schema, Types, model } from 'mongoose';
-
 export interface IEntry extends Document {
   comments: string;
   target: string;
@@ -59,30 +58,39 @@ const titleSchema = new Schema<ITitle>({
 
 export interface IUser extends Document {
   googleId: string;
+  refreshToken?: string;
+  sessionId?: Schema.Types.UUID;
+  sessionExpiryDate?: Date;
   name?: string;
   familyName?: string;
   givenName?: string;
   picture?: string;
   email?: string;
   createdAt: Date;
+  updatedAt?: Date;
   accounts: Types.DocumentArray<IAccount>;
   titles: Types.DocumentArray<ITitle>;
   debts: Types.Array<Types.ObjectId>;
   entries: Types.Array<Types.ObjectId>;
 }
 
-const userSchema = new Schema<IUser>({
-  googleId: { type: String, required: true, unique: true },
-  name: String,
-  familyName: String,
-  givenName: String,
-  picture: String,
-  email: String,
-  createdAt: { type: Date, default: Date.now() },
-  accounts: [accountSchema],
-  titles: [titleSchema],
-  debts: [{ type: Schema.Types.ObjectId, ref: 'Debt' }],
-  entries: [{ type: Schema.Types.ObjectId, ref: 'Entry' }],
-});
+const userSchema = new Schema<IUser>(
+  {
+    googleId: { type: String, required: true, unique: true },
+    refreshToken: String,
+    sessionId: Schema.Types.UUID,
+    sessionExpiryDate: Date,
+    name: String,
+    familyName: String,
+    givenName: String,
+    picture: String,
+    email: String,
+    accounts: [accountSchema],
+    titles: [titleSchema],
+    debts: [{ type: Schema.Types.ObjectId, ref: 'Debt' }],
+    entries: [{ type: Schema.Types.ObjectId, ref: 'Entry' }],
+  },
+  { timestamps: true }
+);
 
 export const User = model<IUser>('User', userSchema);

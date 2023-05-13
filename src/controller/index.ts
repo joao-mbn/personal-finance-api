@@ -1,3 +1,2 @@
-export * from './auth';
-export * from './dashboard';
-export * from './user';
+export * from './auth.controller';
+export * from './dashboard.controller';
