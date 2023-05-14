@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 
 env:
-  AZURE_FUNCTIONAPP_PACKAGE_PATH: './dist'
+  OUT_DIR: './dist'
 
 jobs:
   build:
@@ -34,7 +34,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: node-app
-          path: .
+          path: ${{ env.OUT_DIR }}
 
   deploy:
     runs-on: ubuntu-latest
@@ -48,6 +48,11 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: node-app
+          path: '.'
+
+      - name: List artifact contents
+        run: |
+          ls -R ${{ github.workspace }}/
 
       - name: 'Deploy to Azure Web App'
         uses: azure/webapps-deploy@v2
@@ -55,5 +60,5 @@ jobs:
         with:
           app-name: 'personal-finance-api'
           slot-name: 'Production'
-          package: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
+          package: '.'
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_FB7A575E67294D7F8ABC327A95632A7A }}
