@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 
 env:
-  OUT_DIR: './dist'
+  OUT_DIR: '.'
 
 jobs:
   build:
