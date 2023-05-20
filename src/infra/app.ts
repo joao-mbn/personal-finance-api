@@ -12,10 +12,12 @@ import * as swaggerDocument from './swagger.json';
 export function initApp() {
   const { PORT, ORIGIN, SESSION_SECRET } = env;
 
-  if (!PORT) {
-    console.log('Startup failed: PORT is undefined.');
-    return;
-  }
+  /**
+   * don't load a custom port into production,
+   * as a named pipe will be given automatically.
+   * Doing otherwise will crash the app.
+   */
+  const port = PORT || 5001;
 
   if (!SESSION_SECRET) {
     console.log('Startup failed: SESSION_SECRET is undefined.');
@@ -40,12 +42,13 @@ export function initApp() {
   app.use(sessionValidator);
   app.use(express.json());
   app.use('/swagger', serve, setup(swaggerDocument));
-  app.listen(PORT, () => console.log(`API listening on http://localhost:${PORT}/swagger`));
+  app.listen(port, () => console.log(`API listening on http://localhost:${port}`));
   loadControllers(app);
   app.use(errorHandler);
 }
 
 function loadControllers(app: Express) {
+  // TODO: use routers
   loadDashboardController(app);
   loadAuthController(app);
 }
