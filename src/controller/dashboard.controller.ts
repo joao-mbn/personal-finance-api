@@ -8,12 +8,12 @@ export function loadDashboardController(app: Express) {
 
   app.get(`/${CONTROLLER}/getWidgets`, async (_, response) => {
     response.send([
-      DashboardWidget.Balance,
+      DashboardWidget.Balances,
       DashboardWidget.Debts,
       DashboardWidget.DueSoonBills,
       DashboardWidget.MonthlyEntries,
       DashboardWidget.MonthlyBalance,
-      DashboardWidget.MonthlyStocks,
+      DashboardWidget.Assets,
       DashboardWidget.MonthlyDebts,
     ]);
   });

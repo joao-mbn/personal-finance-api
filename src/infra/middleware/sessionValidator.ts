@@ -3,10 +3,10 @@ import { ErrorObject, Message, User } from '../../model';
 import { refreshGoogleToken, removeTokenAndSessionById, updateSessionExpiryDateById } from '../../service';
 import { parseCookieString } from '../../utils';
 
-const sessionFreeEndpoints = ['auth'];
+const sessionFreeEndpoints = ['/auth/getGoogleConsentUrl', '/auth/google'];
 
 export async function sessionValidator(request: Request, response: Response, next: NextFunction) {
-  if (request.path.split('/').some(breadCrumb => sessionFreeEndpoints.includes(breadCrumb))) {
+  if (sessionFreeEndpoints.includes(request.path)) {
     return next();
   }
 

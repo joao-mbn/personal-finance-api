@@ -8,6 +8,10 @@ export function loadAuthController(app: Express) {
   const CONTROLLER = 'auth';
   const { CLIENT_ID, CLIENT_SECRET, REDIRECT_URL, ORIGIN } = env;
 
+  app.get(`/${CONTROLLER}/ping`, (_, response: Response) => {
+    response.status(200).send('OK!');
+  });
+
   app.get(`/${CONTROLLER}/getGoogleConsentUrl`, async (request: Request, response: Response) => {
     const client = new OAuth2Client(CLIENT_ID, CLIENT_SECRET, REDIRECT_URL);
     const scopes = [
