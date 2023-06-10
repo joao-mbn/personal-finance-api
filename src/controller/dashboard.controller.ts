@@ -118,7 +118,7 @@ export function loadDashboardController(app: Express) {
             timestamp: { $first: '$timestamp' },
           },
         },
-        { $sort: { timestamp: -1 } },
+        { $sort: { timestamp: 1 } },
       ])
     ).reduce((acc: { month: string; balance: number }[], { _id: month, earnings, expenses, balance }, index) => {
       const refBalance = index === 0 ? balance : acc[index - 1].balance;
@@ -156,10 +156,11 @@ export function loadDashboardController(app: Express) {
         $group: {
           _id: { $dateToString: { format: '%m/%Y', date: '$dueDate' } },
           debt: { $sum: '$value' },
+          dueDate: { $first: '$dueDate' },
         },
       },
-      { $sort: { id: 1 } },
-      { $addFields: { month: '$_id' } },
+      { $sort: { dueDate: 1 } },
+      { $project: { _id: 0, month: '$_id', debt: 1 } },
     ]);
 
     response.send(debts);
@@ -190,15 +191,22 @@ export function loadDashboardController(app: Express) {
       { $unwind: '$entries' },
       { $match: { 'entries.timestamp': { $gte: startDate, $lte: endDate } } },
       {
-        $project: { _id: 0, timestamp: '$entries.timestamp', value: '$entries.value', isExpense: '$entries.isExpense' },
+        $project: {
+          _id: 0,
+          timestamp: '$entries.timestamp',
+          value: '$entries.value',
+          isExpense: '$entries.isExpense',
+        },
       },
       {
         $group: {
           _id: { $dateToString: { format: '%m/%Y', date: '$timestamp' } },
           earnings: { $sum: { $cond: [{ $gte: ['$value', 0] }, '$value', 0] } },
           expenses: { $sum: { $cond: [{ $lt: ['$value', 0] }, '$value', 0] } },
+          timestamp: { $first: '$timestamp' },
         },
       },
+      { $sort: { timestamp: 1 } },
       {
         $project: {
           _id: 0,
@@ -221,6 +229,7 @@ export function loadDashboardController(app: Express) {
       { $unwind: '$titles' },
       { $project: { _id: 0, name: '$titles.name', value: '$titles.value', type: '$titles.type' } },
       { $group: { _id: '$type', value: { $sum: '$value' } } },
+      { $project: { _id: 0, type: '$_id', value: 1 } },
     ]);
 
     response.send(assets);
