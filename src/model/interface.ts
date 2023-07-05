@@ -5,3 +5,13 @@ export interface GoogleTokensResponse {
   scope: string;
   id_token: string;
 }
+
+export type DateRange = {
+  from: Date;
+  to: Date;
+};
+
+export type DateRangeRequest = {
+  from: string;
+  to: string;
+};
