@@ -5,7 +5,7 @@ import { Express } from 'express';
 import * as session from 'express-session';
 import { env } from 'process';
 import { serve, setup } from 'swagger-ui-express';
-import { loadAuthController, loadDashboardController } from '../controller';
+import { loadAuthController, loadDashboardController, loadRegistryController } from '../controller';
 import { errorHandler, sessionValidator } from './middleware';
 import * as swaggerDocument from './swagger.json';
 
@@ -49,7 +49,7 @@ export function initApp() {
 }
 
 function loadControllers(app: Express) {
-  // TODO: use routers
   loadDashboardController(app);
+  loadRegistryController(app);
   loadAuthController(app);
 }

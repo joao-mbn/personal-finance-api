@@ -1,14 +1,7 @@
 import { Express, Request } from 'express';
 import { ObjectId } from 'mongodb';
 import { DashboardWidget, DateRangeRequest, IDebt, User } from '../model';
-
-function dateRangeOrDefault(dateRange: DateRangeRequest) {
-  const { from, to } = dateRange;
-  const startDate = new Date(from ?? 0);
-  const endDate = new Date(to ?? '9999-12-31');
-
-  return { startDate, endDate };
-}
+import { dateRangeOrDefault } from '../utils';
 
 export function loadDashboardController(app: Express) {
   const CONTROLLER = 'dashboard';
@@ -26,7 +19,7 @@ export function loadDashboardController(app: Express) {
     ]);
   });
 
-  app.get(`/${CONTROLLER}/getBalances`, async (request, response) => {
+  app.get(`/${CONTROLLER}/getBalances`, async (_, response) => {
     const userId = USER_ID;
     const user = await User.findById(userId);
 
@@ -41,7 +34,7 @@ export function loadDashboardController(app: Express) {
     response.send({ totalBalance, balances });
   });
 
-  app.get(`/${CONTROLLER}/getDebts`, async (request, response) => {
+  app.get(`/${CONTROLLER}/getDebts`, async (_, response) => {
     const userId = USER_ID;
     const user = await User.findById(userId).populate<{ debts: IDebt[] }>('debts');
 

@@ -10,8 +10,8 @@ export interface IEntry extends Document {
 const entrySchema = new Schema<IEntry>({
   comments: String,
   target: { type: String, required: true },
-  timestamp: { type: Date, required: true },
-  type: { type: String, required: true },
+  timestamp: { type: Date, required: true, default: Date.now },
+  type: { type: String },
   value: { type: Number, required: true },
 });
 
