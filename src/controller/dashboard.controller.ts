@@ -110,7 +110,6 @@ export function loadDashboardController(app: Express) {
               balance: 1,
               timestamp: '$entries.timestamp',
               value: '$entries.value',
-              isExpense: '$entries.isExpense',
             },
           },
           {
@@ -198,14 +197,7 @@ export function loadDashboardController(app: Express) {
         },
         { $unwind: '$entries' },
         { $match: { 'entries.timestamp': { $gte: startDate, $lte: endDate } } },
-        {
-          $project: {
-            _id: 0,
-            timestamp: '$entries.timestamp',
-            value: '$entries.value',
-            isExpense: '$entries.isExpense',
-          },
-        },
+        { $project: { _id: 0, timestamp: '$entries.timestamp', value: '$entries.value' } },
         {
           $group: {
             _id: { $dateToString: { format: '%m/%Y', date: '$timestamp' } },
