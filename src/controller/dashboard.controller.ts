@@ -56,7 +56,7 @@ export function loadDashboardController(app: Express) {
 
       const userId = USER_ID;
 
-      const debts = await User.aggregate<IDebt>([
+      const debts = await User.aggregate([
         { $match: { _id: new ObjectId(userId) } },
         {
           $lookup: {
@@ -139,7 +139,7 @@ export function loadDashboardController(app: Express) {
 
       const userId = USER_ID;
 
-      const debts = await User.aggregate<{ debt: number; month: string }>([
+      const debts = await User.aggregate([
         { $match: { _id: new ObjectId(userId) } },
         {
           $lookup: {
@@ -180,12 +180,7 @@ export function loadDashboardController(app: Express) {
 
       const userId = USER_ID;
 
-      const entriesByMonth = await User.aggregate<{
-        month: string;
-        earnings: number;
-        expenses: number;
-        netEarnings: number;
-      }>([
+      const entriesByMonth = await User.aggregate([
         { $match: { _id: new ObjectId(userId) } },
         {
           $lookup: {
@@ -225,7 +220,7 @@ export function loadDashboardController(app: Express) {
   app.get(`/${CONTROLLER}/getAssets`, async (_, response) => {
     const userId = USER_ID;
 
-    const assets = await User.aggregate<{ type: string; value: number }>([
+    const assets = await User.aggregate([
       { $match: { _id: new ObjectId(userId) } },
       { $unwind: '$titles' },
       { $project: { _id: 0, name: '$titles.name', value: '$titles.value', type: '$titles.type' } },

@@ -1,18 +1,24 @@
 import { Document, Schema, Types, model } from 'mongoose';
 export interface IEntry extends Document {
-  comments: string;
+  comments?: string;
   target: string;
   timestamp: Date;
-  type: string;
+  type?: string;
   value: number;
 }
 
 const entrySchema = new Schema<IEntry>({
   comments: String,
-  target: { type: String, required: true },
+  target: { type: String, required: true, minlength: 3, maxlength: 30 },
   timestamp: { type: Date, required: true, default: Date.now },
-  type: { type: String },
-  value: { type: Number, required: true },
+  type: { type: String, maxlength: 30 },
+  value: {
+    type: Number,
+    required: true,
+    validate: {
+      validator: (value: number) => value !== 0,
+    },
+  },
 });
 
 export const Entry = model<IEntry>('Entry', entrySchema, 'entries');

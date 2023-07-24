@@ -1,10 +1,10 @@
 import { Express, Request } from 'express';
 import { ObjectId } from 'mongodb';
-import { DateRangeRequest, User } from '../model';
+import { DateRangeRequest, IEntry, User } from '../model';
 import { dateRangeOrDefault } from '../utils';
 
 export function loadRegistryController(app: Express) {
-  const CONTROLLER = 'registry';
+  const CONTROLLER = 'register';
   const USER_ID = '6449ca2830942603c86b90d2';
 
   app.get(`/${CONTROLLER}/getAll`, async (request: Request<unknown, unknown, unknown, DateRangeRequest>, response) => {
@@ -12,7 +12,7 @@ export function loadRegistryController(app: Express) {
 
     const userId = USER_ID;
 
-    const balancesByMonth = await User.aggregate<{ _id: string; earnings: number; expenses: number; balance: number }>([
+    const registers = await User.aggregate<IEntry>([
       { $match: { _id: new ObjectId(userId) } },
       {
         $lookup: {
@@ -38,6 +38,14 @@ export function loadRegistryController(app: Express) {
       { $sort: { timestamp: -1 } },
     ]);
 
-    response.send(balancesByMonth);
+    const typeOptions = new Set<Required<Registry['type']>>();
+    const targetOptions = new Set<Registry['target']>();
+
+    registers.forEach(({ type, target }) => {
+      type && typeOptions.add(type);
+      targetOptions.add(target);
+    });
+
+    response.send({ registers, typeOptions: [...typeOptions], targetOptions: [...targetOptions] });
   });
 }
