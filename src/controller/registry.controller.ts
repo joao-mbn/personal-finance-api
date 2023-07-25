@@ -1,4 +1,4 @@
-import { Express, Request } from 'express';
+import { Express, NextFunction, Request } from 'express';
 import { ObjectId } from 'mongodb';
 import { DateRangeRequest, Entry, IEntry, Message, User } from '../model';
 import { dateRangeOrDefault } from '../utils';
@@ -52,32 +52,38 @@ export function loadRegistryController(app: Express) {
     response.send({ registers, typeOptions: [...typeOptions], targetOptions: [...targetOptions] });
   });
 
-  app.post(`/${CONTROLLER}/edit`, async (request: Request<unknown, unknown, IEntry, DateRangeRequest>, response) => {
-    const { body } = request;
-    const userId = USER_ID;
-    const entryId = new ObjectId(body.id);
+  app.post(
+    `/${CONTROLLER}/edit`,
+    async (request: Request<unknown, unknown, IEntry, DateRangeRequest>, response, next: NextFunction) => {
+      const { body } = request;
+      const userId = USER_ID;
+      const entryId = new ObjectId(body.id);
 
-    const entryBelongsToUser = (
-      await User.aggregate<{ hasEntry: boolean }>([
-        { $match: { _id: new ObjectId(userId) } },
-        { $project: { hasEntry: { $in: [entryId, '$entries'] } } },
-      ])
-    )[0]?.hasEntry;
+      const entryBelongsToUser = (
+        await User.aggregate<{ hasEntry: boolean }>([
+          { $match: { _id: new ObjectId(userId) } },
+          { $project: { hasEntry: { $in: [entryId, '$entries'] } } },
+        ])
+      )[0]?.hasEntry;
 
-    if (!entryBelongsToUser) {
-      return response.status(401).send(Message.EditingNotAllowedEntry);
+      if (!entryBelongsToUser) {
+        return response.status(401).send(Message.EditingNotAllowedEntry);
+      }
+
+      Entry.findOneAndReplace<IEntry>(
+        { _id: entryId },
+        { body },
+        { returnDocument: 'after', lean: true, runValidators: true }
+      )
+        .then(newEntry => {
+          if (newEntry == null) {
+            return response.status(500).send(Message.EntryWasNotCreated);
+          }
+
+          const { _id, ...rest } = newEntry;
+          response.send({ ...rest, id: _id });
+        })
+        .catch(next);
     }
-
-    const newEntry = await Entry.findOneAndReplace<IEntry>({ _id: entryId }, body, {
-      returnDocument: 'after',
-      lean: true,
-    });
-
-    if (newEntry == null) {
-      return response.status(500).send(Message.EntryWasNotCreated);
-    }
-
-    const { _id, ...rest } = newEntry;
-    response.send({ ...rest, id: _id });
-  });
+  );
 }

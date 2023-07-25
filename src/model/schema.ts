@@ -1,4 +1,5 @@
 import { Document, Schema, Types, model } from 'mongoose';
+import { Field, Message } from '.';
 export interface IEntry extends Document {
   comments?: string;
   target: string;
@@ -8,15 +9,21 @@ export interface IEntry extends Document {
 }
 
 const entrySchema = new Schema<IEntry>({
-  comments: String,
-  target: { type: String, required: true, minlength: 3, maxlength: 30 },
-  timestamp: { type: Date, required: true, default: Date.now },
-  type: { type: String, maxlength: 30 },
+  comments: { type: String, maxlength: [200, `${Field.Comment}|${Message.ExceededMaxLength}`] },
+  target: {
+    type: String,
+    required: [true, `${Field.Target}|${Message.IsRequired}`],
+    minlength: [3, `${Field.Target}|${Message.BelowMinLength}`],
+    maxlength: [30, `${Field.Target}|${Message.ExceededMaxLength}`],
+  },
+  timestamp: { type: Date, required: [true, `${Field.Timestamp}|${Message.IsRequired}`], default: Date.now },
+  type: { type: String, maxlength: [30, `${Field.Type}|${Message.ExceededMaxLength}`] },
   value: {
     type: Number,
-    required: true,
+    required: [true, `${Field.Value}|${Message.IsRequired}`],
     validate: {
       validator: (value: number) => value !== 0,
+      message: `${Field.Value}|${Message.CannotBeNullOrZero}`,
     },
   },
 });
