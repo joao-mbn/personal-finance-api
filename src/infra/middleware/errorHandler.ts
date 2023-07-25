@@ -1,12 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
 import { ErrorObject } from '../../model';
 
-export async function errorHandler(
-  error: ErrorObject | unknown,
-  request: Request,
-  response: Response,
-  next: NextFunction
-) {
+export async function errorHandler(error: ErrorObject | unknown, _: Request, response: Response, next: NextFunction) {
   if (response.headersSent || !(error instanceof ErrorObject)) {
     return next(error);
   }

@@ -7,38 +7,15 @@ export function loadRegistryController(app: Express) {
   const CONTROLLER = 'register';
   const USER_ID = '6449ca2830942603c86b90d2';
 
+  interface Register extends IEntry {
+    id: string;
+  }
+
   app.get(`/${CONTROLLER}/getAll`, async (request: Request<unknown, unknown, unknown, DateRangeRequest>, response) => {
-    const registersWithOptions = await getRegistersWithOptions(request.query);
-    response.send(registersWithOptions);
-  });
-
-  app.post(`/${CONTROLLER}/edit`, async (request: Request<unknown, unknown, IEntry, DateRangeRequest>, response) => {
-    const { query, body } = request;
-    const userId = USER_ID;
-    const entryId = new ObjectId(body.id);
-
-    const entryBelongsToUser = (
-      await User.aggregate<{ hasEntry: boolean }>([
-        { $match: { _id: new ObjectId(userId) } },
-        { $project: { hasEntry: { $in: [entryId, '$entries'] } } },
-      ])
-    )[0]?.hasEntry;
-
-    if (!entryBelongsToUser) {
-      return response.status(401).send(Message.EditingNotAllowedEntry);
-    }
-
-    await Entry.findOneAndReplace({ _id: entryId }, body);
-
-    const registersWithOptions = await getRegistersWithOptions(query);
-    response.send(registersWithOptions);
-  });
-
-  async function getRegistersWithOptions(dateRange: DateRangeRequest) {
-    const { startDate, endDate } = dateRangeOrDefault(dateRange);
+    const { startDate, endDate } = dateRangeOrDefault(request.query);
     const userId = USER_ID;
 
-    const registers = await User.aggregate<IEntry>([
+    const registers = await User.aggregate<Register>([
       { $match: { _id: new ObjectId(userId) } },
       {
         $lookup: {
@@ -72,6 +49,35 @@ export function loadRegistryController(app: Express) {
       targetOptions.add(target);
     });
 
-    return { registers, typeOptions: [...typeOptions], targetOptions: [...targetOptions] };
-  }
+    response.send({ registers, typeOptions: [...typeOptions], targetOptions: [...targetOptions] });
+  });
+
+  app.post(`/${CONTROLLER}/edit`, async (request: Request<unknown, unknown, IEntry, DateRangeRequest>, response) => {
+    const { body } = request;
+    const userId = USER_ID;
+    const entryId = new ObjectId(body.id);
+
+    const entryBelongsToUser = (
+      await User.aggregate<{ hasEntry: boolean }>([
+        { $match: { _id: new ObjectId(userId) } },
+        { $project: { hasEntry: { $in: [entryId, '$entries'] } } },
+      ])
+    )[0]?.hasEntry;
+
+    if (!entryBelongsToUser) {
+      return response.status(401).send(Message.EditingNotAllowedEntry);
+    }
+
+    const newEntry = await Entry.findOneAndReplace<IEntry>({ _id: entryId }, body, {
+      returnDocument: 'after',
+      lean: true,
+    });
+
+    if (newEntry == null) {
+      return response.status(500).send(Message.EntryWasNotCreated);
+    }
+
+    const { _id, ...rest } = newEntry;
+    response.send({ ...rest, id: _id });
+  });
 }

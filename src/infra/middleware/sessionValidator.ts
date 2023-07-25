@@ -5,7 +5,7 @@ import { parseCookieString } from '../../utils';
 
 const sessionFreeEndpoints = ['/auth/getGoogleConsentUrl', '/auth/google'];
 
-export async function sessionValidator(request: Request, response: Response, next: NextFunction) {
+export async function sessionValidator(request: Request, _: Response, next: NextFunction) {
   if (sessionFreeEndpoints.includes(request.path)) {
     return next();
   }
