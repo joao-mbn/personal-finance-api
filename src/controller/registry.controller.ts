@@ -1,6 +1,6 @@
 import { Express, Request } from 'express';
 import { ObjectId } from 'mongodb';
-import { DateRangeRequest, IEntry, User } from '../model';
+import { DateRangeRequest, Entry, IEntry, Message, User } from '../model';
 import { dateRangeOrDefault } from '../utils';
 
 export function loadRegistryController(app: Express) {
@@ -8,8 +8,34 @@ export function loadRegistryController(app: Express) {
   const USER_ID = '6449ca2830942603c86b90d2';
 
   app.get(`/${CONTROLLER}/getAll`, async (request: Request<unknown, unknown, unknown, DateRangeRequest>, response) => {
-    const { startDate, endDate } = dateRangeOrDefault(request.query);
+    const registersWithOptions = await getRegistersWithOptions(request.query);
+    response.send(registersWithOptions);
+  });
 
+  app.post(`/${CONTROLLER}/edit`, async (request: Request<unknown, unknown, IEntry, DateRangeRequest>, response) => {
+    const { query, body } = request;
+    const userId = USER_ID;
+    const entryId = new ObjectId(body.id);
+
+    const entryBelongsToUser = (
+      await User.aggregate<{ hasEntry: boolean }>([
+        { $match: { _id: new ObjectId(userId) } },
+        { $project: { hasEntry: { $in: [entryId, '$entries'] } } },
+      ])
+    )[0]?.hasEntry;
+
+    if (!entryBelongsToUser) {
+      return response.status(401).send(Message.EditingNotAllowedEntry);
+    }
+
+    await Entry.findOneAndReplace({ _id: entryId }, body);
+
+    const registersWithOptions = await getRegistersWithOptions(query);
+    response.send(registersWithOptions);
+  });
+
+  async function getRegistersWithOptions(dateRange: DateRangeRequest) {
+    const { startDate, endDate } = dateRangeOrDefault(dateRange);
     const userId = USER_ID;
 
     const registers = await User.aggregate<IEntry>([
@@ -38,14 +64,14 @@ export function loadRegistryController(app: Express) {
       { $sort: { timestamp: -1 } },
     ]);
 
-    const typeOptions = new Set<Required<Registry['type']>>();
-    const targetOptions = new Set<Registry['target']>();
+    const typeOptions = new Set<Required<IEntry['type']>>();
+    const targetOptions = new Set<IEntry['target']>();
 
     registers.forEach(({ type, target }) => {
       type && typeOptions.add(type);
       targetOptions.add(target);
     });
 
-    response.send({ registers, typeOptions: [...typeOptions], targetOptions: [...targetOptions] });
-  });
+    return { registers, typeOptions: [...typeOptions], targetOptions: [...targetOptions] };
+  }
 }

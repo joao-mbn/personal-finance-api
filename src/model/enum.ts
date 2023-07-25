@@ -14,4 +14,5 @@ export enum Message {
   NoIdToken = 'NO_ID_TOKEN',
   SessionExpired = 'SESSION_EXPIRED',
   TokenWithoutInfo = 'TOKEN_WITHOUT_INFO',
+  EditingNotAllowedEntry = 'EDITING_NOT_ALLOWED_ENTRY',
 }
