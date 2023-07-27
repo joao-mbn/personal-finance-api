@@ -1,3 +1,5 @@
+import { IEntry } from '.';
+
 export interface GoogleTokensResponse {
   access_token: string;
   expires_in: Number;
@@ -15,3 +17,7 @@ export type DateRangeRequest = {
   from: string;
   to: string;
 };
+
+export interface Register extends IEntry {
+  id: string;
+}

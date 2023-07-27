@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
-import { ErrorObject, Message, User } from '../../model';
-import { refreshGoogleToken, removeTokenAndSessionById, updateSessionExpiryDateById } from '../../service';
+import { ErrorObject, Message } from '../../model';
+import { refreshGoogleToken } from '../../service/token.service';
+import { getUserBySessionId, removeTokenAndSessionById, updateSessionExpiryDateById } from '../../service/user.service';
 import { parseCookieString } from '../../utils';
 
 const sessionFreeEndpoints = ['/auth/getGoogleConsentUrl', '/auth/google'];
@@ -17,7 +18,7 @@ export async function sessionValidator(request: Request, _: Response, next: Next
     return next(error);
   }
 
-  const user = await User.findOne({ sessionId });
+  const user = await getUserBySessionId(sessionId);
   if (!user) {
     const error = new ErrorObject(404, Message.InvalidSessionId);
     return next(error);

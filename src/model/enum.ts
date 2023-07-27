@@ -20,6 +20,7 @@ export enum Message {
   NoSessionId = 'NO_SESSION_ID',
   SessionExpired = 'SESSION_EXPIRED',
   TokenWithoutInfo = 'TOKEN_WITHOUT_INFO',
+  UserNotFound = 'USER_NOT_FOUND',
 }
 
 export enum Field {
