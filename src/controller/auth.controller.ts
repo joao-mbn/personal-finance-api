@@ -1,5 +1,6 @@
 import { CookieOptions, Request, Response, Router } from 'express';
 import { env } from 'process';
+import { asyncHandler } from '../core/asyncHandler';
 import { getGoogleConsentUrl, refreshSessionWithGoogle } from '../service/auth.service';
 
 export const router = Router();
@@ -13,15 +14,18 @@ router.get('/getGoogleConsentUrl', (_, response: Response) => {
   response.send(url);
 });
 
-router.get('/google', async (request: Request, response: Response) => {
-  const {
-    query: { code },
-    session: { id: sessionId },
-  } = request;
-  const { ORIGIN } = env;
+router.get(
+  '/google',
+  asyncHandler(async (request: Request, response: Response) => {
+    const {
+      query: { code },
+      session: { id: sessionId },
+    } = request;
+    const { ORIGIN } = env;
 
-  await refreshSessionWithGoogle(code as string, sessionId);
+    await refreshSessionWithGoogle(code as string, sessionId);
 
-  response.cookie('sessionId', sessionId, request.session.cookie as CookieOptions);
-  ORIGIN && response.redirect(ORIGIN);
-});
+    response.cookie('sessionId', sessionId, request.session.cookie as CookieOptions);
+    ORIGIN && response.redirect(ORIGIN);
+  })
+);

@@ -3,11 +3,11 @@
   "version": "1.0.0",
   "description": "",
   "scripts": {
-    "start": "node dist/src/infra/startup.js",
+    "start": "node dist/src/core/startup.js",
     "test": "echo \"No tests yet...\"",
     "build": "tsc",
     "watch": "tsc -w",
-    "devserver": "nodemon src/infra/startup.ts",
+    "devserver": "nodemon src/core/startup.ts",
     "prettier": "npx prettier --write ."
   },
   "keywords": [],

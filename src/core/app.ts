@@ -1,12 +1,13 @@
 import * as cors from 'cors';
 import { randomUUID } from 'crypto';
 import * as express from 'express';
-import { Express } from 'express';
+import { Express, json } from 'express';
 import * as session from 'express-session';
 import { env } from 'process';
 import { serve, setup } from 'swagger-ui-express';
 import { authRouter, dashboardRouter, registerRouter } from '../controller';
-import { errorHandler, sessionValidator } from './middleware';
+import { errorHandler, sessionValidator } from '../middleware';
+import { asyncHandler } from './asyncHandler';
 import * as swaggerDocument from './swagger.json';
 
 export function initApp() {
@@ -18,7 +19,7 @@ export function initApp() {
   app.use(errorHandler); // Order matters. Error middleware should be last.
 
   /**
-   * don't load a custom port into production,
+   * Don't load a custom port into production,
    * as a named pipe will be given automatically.
    * Doing otherwise will crash the app.
    */
@@ -33,7 +34,7 @@ function loadMiddlewares(app: Express) {
     return console.log('Startup failed: SESSION_SECRET is undefined.');
   }
 
-  app.use(express.json());
+  app.use(json());
   app.use('/swagger', serve, setup(swaggerDocument));
   app.use(cors({ credentials: true, origin: ORIGIN }));
   const sessionOptions: session.SessionOptions = {
@@ -50,7 +51,7 @@ function loadMiddlewares(app: Express) {
     sessionOptions.cookie!.sameSite = 'none';
   }
   app.use(session(sessionOptions));
-  app.use(sessionValidator);
+  app.use(asyncHandler(sessionValidator));
 }
 
 function loadControllers(app: Express) {

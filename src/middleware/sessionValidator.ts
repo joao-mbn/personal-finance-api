@@ -1,8 +1,8 @@
 import { NextFunction, Request, Response } from 'express';
-import { ErrorObject, Message } from '../../model';
-import { refreshGoogleToken } from '../../service/token.service';
-import { getUserBySessionId, removeTokenAndSessionById, updateSessionExpiryDateById } from '../../service/user.service';
-import { parseCookieString } from '../../utils';
+import { ErrorObject, Message } from '../model';
+import { refreshGoogleToken } from '../service/token.service';
+import { getUserBySessionId, removeTokenAndSessionById, updateSessionExpiryDateById } from '../service/user.service';
+import { parseCookieString } from '../utils';
 
 const sessionFreeEndpoints = ['/auth/getGoogleConsentUrl', '/auth/google'];
 

@@ -1,0 +1,4 @@
+{
+  "appService.defaultWebAppToDeploy": "/subscriptions/1d913ca9-65ff-49ff-856a-0235a7d3f701/resourceGroups/rg-personal-finance-api/providers/Microsoft.Web/sites/personal-finance-api",
+  "appService.deploySubpath": "."
+}
