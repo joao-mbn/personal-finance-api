@@ -24,11 +24,12 @@ export async function sessionValidator(request: Request, _: Response, next: Next
     return next(error);
   }
 
-  const { refreshToken, sessionExpiryDate, _id } = user;
+  const { refreshToken, sessionExpiryDate, id } = user;
+
   const sessionExpired = (sessionExpiryDate ?? 0) > new Date();
 
   if (!sessionExpired) {
-    await updateSessionExpiryDateById(_id);
+    request.user = await updateSessionExpiryDateById(id);
     return next();
   }
 
@@ -40,10 +41,11 @@ export async function sessionValidator(request: Request, _: Response, next: Next
   try {
     await refreshGoogleToken(refreshToken);
   } catch (error) {
-    removeTokenAndSessionById(_id);
+    removeTokenAndSessionById(id);
     return next(error);
   }
 
-  await updateSessionExpiryDateById(_id);
+  request.user = await updateSessionExpiryDateById(id);
+
   next();
 }

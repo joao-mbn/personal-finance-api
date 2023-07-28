@@ -1,3 +1,4 @@
+import { ObjectId } from 'mongodb';
 import { Document, Schema, Types, model } from 'mongoose';
 import { Field, Message } from '.';
 export interface IEntry extends Document {
@@ -69,7 +70,7 @@ const titleSchema = new Schema<ITitle>({
   value: { type: Number, required: true },
 });
 
-export interface IUser extends Document {
+export interface IUser extends Document<ObjectId> {
   googleId: string;
   refreshToken?: string;
   sessionId?: Schema.Types.UUID;

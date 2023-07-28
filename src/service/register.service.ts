@@ -47,7 +47,7 @@ export async function edit(entry: IEntry, userId: string) {
   await ensureEntryBelongsToUser(entryId, userId);
 
   const newEntry = await Entry.findOneAndReplace<IEntry>({ _id: entryId }, entry, {
-    returnDocument: 'after',
+    new: true,
     lean: true,
     runValidators: true,
   });

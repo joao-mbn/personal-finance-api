@@ -11,8 +11,8 @@ import {
   getMonthlyEntries,
   getWidgets,
 } from '../service/dashboard.service';
+import { getUserFromRequest } from '../service/user.service';
 
-const USER_ID = '6449ca2830942603c86b90d2';
 export const router = Router();
 
 router.get('/getWidgets', async (_, response) => {
@@ -22,8 +22,9 @@ router.get('/getWidgets', async (_, response) => {
 
 router.get(
   '/getBalances',
-  asyncHandler(async (_, response) => {
-    const userId = USER_ID;
+  asyncHandler(async (request, response) => {
+    const { id: userId } = getUserFromRequest(request);
+
     const balances = await getBalances(userId);
     response.send(balances);
   })
@@ -31,8 +32,9 @@ router.get(
 
 router.get(
   '/getDebts',
-  asyncHandler(async (_, response) => {
-    const userId = USER_ID;
+  asyncHandler(async (request, response) => {
+    const { id: userId } = getUserFromRequest(request);
+
     const debts = await getDebts(userId);
     response.send(debts);
   })
@@ -41,7 +43,8 @@ router.get(
 router.get(
   '/getDueSoonBills',
   asyncHandler(async (request: Request<unknown, unknown, unknown, DateRangeRequest>, response) => {
-    const userId = USER_ID;
+    const { id: userId } = getUserFromRequest(request);
+
     const debts = await getDueSoonBills(request.query, userId);
     response.send(debts);
   })
@@ -50,7 +53,8 @@ router.get(
 router.get(
   '/getMonthlyBalances',
   asyncHandler(async (request: Request<unknown, unknown, unknown, DateRangeRequest>, response) => {
-    const userId = USER_ID;
+    const { id: userId } = getUserFromRequest(request);
+
     const balancesByMonth = await getMonthlyBalances(request.query, userId);
     response.send(balancesByMonth);
   })
@@ -59,7 +63,8 @@ router.get(
 router.get(
   '/getMonthlyDebts',
   asyncHandler(async (request: Request<unknown, unknown, unknown, DateRangeRequest>, response) => {
-    const userId = USER_ID;
+    const { id: userId } = getUserFromRequest(request);
+
     const debtsByMonth = await getMonthlyDebts(request.query, userId);
     response.send(debtsByMonth);
   })
@@ -68,7 +73,8 @@ router.get(
 router.get(
   '/getMonthlyEntries',
   asyncHandler(async (request: Request<unknown, unknown, unknown, DateRangeRequest>, response) => {
-    const userId = USER_ID;
+    const { id: userId } = getUserFromRequest(request);
+
     const entriesByMonth = await getMonthlyEntries(request.query, userId);
     response.send(entriesByMonth);
   })
@@ -76,8 +82,9 @@ router.get(
 
 router.get(
   '/getAssets',
-  asyncHandler(async (_, response) => {
-    const userId = USER_ID;
+  asyncHandler(async (request, response) => {
+    const { id: userId } = getUserFromRequest(request);
+
     const assets = await getAssets(userId);
     response.send(assets);
   })
