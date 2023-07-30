@@ -13,7 +13,7 @@ async function startup() {
     // connect to database.
     await connect();
   } catch (error) {
-    console.log(error);
+    console.error(error);
   }
 }
 

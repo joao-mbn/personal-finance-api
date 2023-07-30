@@ -5,11 +5,12 @@ export async function connect() {
   const { CONNECTION_STRING, DATABASE } = env;
 
   if (!CONNECTION_STRING) {
-    console.log('Startup failed: CONNECTION_STRING is undefined.');
+    console.error('Startup failed: CONNECTION_STRING is undefined.');
     return;
   }
+
   if (!DATABASE) {
-    console.log('Startup failed: DATABASE is undefined.');
+    console.error('Startup failed: DATABASE is undefined.');
     return;
   }
 

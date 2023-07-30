@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
 import { Error } from 'mongoose';
-import { ErrorObject } from '../model';
+import { ErrorObject, Message } from '../model';
 
 export async function errorHandler(error: unknown, _: Request, response: Response, next: NextFunction) {
   if (response.headersSent) return next(error);
@@ -22,5 +22,5 @@ export async function errorHandler(error: unknown, _: Request, response: Respons
     }
   }
 
-  return next(error);
+  return response.status(500).send(Message.AnErrorOccurred);
 }
