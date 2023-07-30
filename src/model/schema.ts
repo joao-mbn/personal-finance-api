@@ -1,7 +1,8 @@
 import { ObjectId } from 'mongodb';
 import { Document, Schema, Types, model } from 'mongoose';
 import { Field, Message } from '.';
-export interface IEntry extends Document {
+export interface IEntry {
+  id?: string;
   comments?: string;
   target: string;
   timestamp: Date;

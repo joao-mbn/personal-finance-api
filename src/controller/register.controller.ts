@@ -1,27 +1,58 @@
 import { Request, Response, Router } from 'express';
 import { asyncHandler } from '../core/asyncHandler';
-import { DateRangeRequest, IEntry } from '../model';
-import { edit, getAll } from '../service/register.service';
+import { DateRangeRequest, IEntry, WithRequired } from '../model';
+import { deleteOne, getMany, updateOne } from '../service/register.service';
 import { getUserFromRequest } from '../service/user.service';
 
 export const router = Router();
 
 router.get(
-  '/getAll',
+  '/',
   asyncHandler(async (request: Request<unknown, unknown, unknown, DateRangeRequest>, response) => {
-    const { id } = getUserFromRequest(request);
+    const { id: userId } = getUserFromRequest(request);
 
-    const registersWithOptions = await getAll(request.query, id);
+    const registersWithOptions = await getMany(request.query, userId);
     response.send(registersWithOptions);
   })
 );
 
 router.post(
-  '/edit',
-  asyncHandler(async (request: Request<unknown, unknown, IEntry, DateRangeRequest>, response: Response) => {
-    const { id } = getUserFromRequest(request);
+  '/',
+  asyncHandler(
+    async (
+      request: Request<{ id: string }, unknown, WithRequired<IEntry, 'id'>, DateRangeRequest>,
+      response: Response
+    ) => {
+      const { id: userId } = getUserFromRequest(request);
 
-    const newEntry = await edit(request.body, id);
-    response.send(newEntry);
+      const newEntry = await updateOne(request.body, userId);
+      response.send(newEntry);
+    }
+  )
+);
+
+router.post(
+  '/:id',
+  asyncHandler(
+    async (
+      request: Request<{ id: string }, unknown, WithRequired<IEntry, 'id'>, DateRangeRequest>,
+      response: Response
+    ) => {
+      const { id: userId } = getUserFromRequest(request);
+
+      const newEntry = await updateOne(request.body, userId);
+      response.send(newEntry);
+    }
+  )
+);
+
+router.delete(
+  '/:id',
+  asyncHandler(async (request: Request<{ id: string }, unknown, unknown, unknown>, response: Response) => {
+    const { id: userId } = getUserFromRequest(request);
+    const { id: entryId } = request.params;
+
+    const deletedEntryId = await deleteOne(entryId, userId);
+    response.send(deletedEntryId);
   })
 );

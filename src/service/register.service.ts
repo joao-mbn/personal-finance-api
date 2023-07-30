@@ -1,8 +1,8 @@
 import { ObjectId } from 'mongodb';
-import { DateRangeRequest, Entry, ErrorObject, IEntry, Message, Register, User } from '../model';
+import { DateRangeRequest, Entry, ErrorObject, IEntry, Message, Register, User, WithRequired } from '../model';
 import { dateRangeOrDefault } from '../utils';
 
-export async function getAll(dateRange: DateRangeRequest, userId: string) {
+export async function getMany(dateRange: DateRangeRequest, userId: string) {
   const { startDate, endDate } = dateRangeOrDefault(dateRange);
   const registers = await User.aggregate<Register>([
     { $match: { _id: new ObjectId(userId) } },
@@ -41,7 +41,29 @@ export async function getAll(dateRange: DateRangeRequest, userId: string) {
   return { registers, typeOptions: [...typeOptions], targetOptions: [...targetOptions] };
 }
 
-export async function edit(entry: IEntry, userId: string) {
+export async function createOne(entry: IEntry, userId: string) {
+  const newEntry = await Entry.create<IEntry>([entry], {
+    validateBeforeSave: true,
+  });
+
+  if (newEntry?.[0] == null) {
+    const error = new ErrorObject(500, Message.EntryWasNotCreated);
+    throw error;
+  }
+  const { _id } = newEntry[0];
+
+  const _userId = new ObjectId(userId);
+  const { modifiedCount } = await User.updateOne({ _id: _userId }, { $push: { entries: _id } });
+
+  if (modifiedCount === 0) {
+    const error = new ErrorObject(500, Message.EntryWasNotAssociated);
+    throw error;
+  }
+
+  return { ...newEntry, id: _id };
+}
+
+export async function updateOne(entry: WithRequired<IEntry, 'id'>, userId: string) {
   const entryId = new ObjectId(entry.id);
 
   await ensureEntryBelongsToUser(entryId, userId);
@@ -53,12 +75,28 @@ export async function edit(entry: IEntry, userId: string) {
   });
 
   if (newEntry == null) {
-    const error = new ErrorObject(500, Message.EntryWasNotCreated, true);
+    const error = new ErrorObject(500, Message.EntryWasNotUpdated);
     throw error;
   }
 
-  const { _id, ...rest } = newEntry;
-  return { ...rest, id: _id };
+  return newEntry;
+}
+
+export async function deleteOne(entryId: string, userId: string) {
+  const _entryId = new ObjectId(entryId);
+  const _userId = new ObjectId(userId);
+
+  await ensureEntryBelongsToUser(_entryId, _userId);
+
+  const { deletedCount } = await Entry.deleteOne({ _id: _entryId });
+  if (deletedCount === 1) {
+    const error = new ErrorObject(500, Message.EntryWasNotDeleted);
+    throw error;
+  }
+
+  await User.updateOne({ _id: _userId }, { $pull: { entries: _entryId } });
+
+  return entryId;
 }
 
 async function ensureEntryBelongsToUser(entryId: string | ObjectId, userId: string | ObjectId) {
@@ -73,7 +111,7 @@ async function ensureEntryBelongsToUser(entryId: string | ObjectId, userId: stri
   )[0]?.hasEntry;
 
   if (!entryBelongsToUser) {
-    const error = new ErrorObject(401, Message.EditingNotAllowedEntry, true);
+    const error = new ErrorObject(401, Message.EditingNotAllowedEntry);
     throw error;
   }
 }
