@@ -1,7 +1,7 @@
 import { Request, Response, Router } from 'express';
 import { asyncHandler } from '../core/asyncHandler';
 import { DateRangeRequest, IEntry, WithRequired } from '../model';
-import { deleteOne, getMany, updateOne } from '../service/register.service';
+import { createOne, deleteOne, getMany, updateOne } from '../service/register.service';
 import { getUserFromRequest } from '../service/user.service';
 
 export const router = Router();
@@ -25,7 +25,7 @@ router.post(
     ) => {
       const { id: userId } = getUserFromRequest(request);
 
-      const newEntry = await updateOne(request.body, userId);
+      const newEntry = await createOne(request.body, userId);
       response.send(newEntry);
     }
   )

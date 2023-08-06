@@ -42,15 +42,15 @@ export async function getMany(dateRange: DateRangeRequest, userId: string) {
 }
 
 export async function createOne(entry: IEntry, userId: string) {
-  const newEntry = await Entry.create<IEntry>([entry], {
+  const newEntryArray = await Entry.create<IEntry>([entry], {
     validateBeforeSave: true,
   });
 
-  if (newEntry?.[0] == null) {
+  if (newEntryArray?.[0] == null) {
     const error = new ErrorObject(500, Message.EntryWasNotCreated);
     throw error;
   }
-  const { _id } = newEntry[0];
+  const { _id, ...newEntry } = newEntryArray[0].toObject();
 
   const _userId = new ObjectId(userId);
   const { modifiedCount } = await User.updateOne({ _id: _userId }, { $push: { entries: _id } });
@@ -60,7 +60,7 @@ export async function createOne(entry: IEntry, userId: string) {
     throw error;
   }
 
-  return { ...newEntry, id: _id };
+  return newEntry;
 }
 
 export async function updateOne(entry: WithRequired<IEntry, 'id'>, userId: string) {
@@ -68,7 +68,7 @@ export async function updateOne(entry: WithRequired<IEntry, 'id'>, userId: strin
 
   await ensureEntryBelongsToUser(entryId, userId);
 
-  const newEntry = await Entry.findOneAndReplace<IEntry>({ _id: entryId }, entry, {
+  const newEntry = await Entry.findOneAndReplace<IEntry & { _id: ObjectId }>({ _id: entryId }, entry, {
     new: true,
     lean: true,
     runValidators: true,
@@ -79,7 +79,8 @@ export async function updateOne(entry: WithRequired<IEntry, 'id'>, userId: strin
     throw error;
   }
 
-  return newEntry;
+  const { _id, ...rest } = newEntry;
+  return { id: _id, ...rest };
 }
 
 export async function deleteOne(entryId: string, userId: string) {
