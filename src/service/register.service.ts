@@ -50,7 +50,7 @@ export async function createOne(entry: IEntry, userId: string) {
     const error = new ErrorObject(500, Message.EntryWasNotCreated);
     throw error;
   }
-  const { _id, ...newEntry } = newEntryArray[0].toObject();
+  const { _id, ...rest } = newEntryArray[0].toObject();
 
   const _userId = new ObjectId(userId);
   const { modifiedCount } = await User.updateOne({ _id: _userId }, { $push: { entries: _id } });
@@ -60,7 +60,7 @@ export async function createOne(entry: IEntry, userId: string) {
     throw error;
   }
 
-  return newEntry;
+  return { id: _id, ...rest };
 }
 
 export async function updateOne(entry: WithRequired<IEntry, 'id'>, userId: string) {
