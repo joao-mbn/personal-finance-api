@@ -90,7 +90,7 @@ export async function deleteOne(entryId: string, userId: string) {
   await ensureEntryBelongsToUser(_entryId, _userId);
 
   const { deletedCount } = await Entry.deleteOne({ _id: _entryId });
-  if (deletedCount === 1) {
+  if (deletedCount === 0) {
     const error = new ErrorObject(500, Message.EntryWasNotDeleted);
     throw error;
   }
