@@ -10,16 +10,20 @@ export interface IEntry {
   value: number;
 }
 
+const REGISTER_OPTION_MIN_LENGTH = 3;
+const REGISTER_OPTION_MAX_LENGTH = 30;
+const REGISTER_COMMENT_MAX_LENGTH = 200;
+
 const entrySchema = new Schema<IEntry>({
-  comments: { type: String, maxlength: [200, `${Field.Comment}|${Message.ExceededMaxLength}`] },
+  comments: { type: String, maxlength: [REGISTER_COMMENT_MAX_LENGTH, `${Field.Comment}|${Message.ExceededMaxLength}`] },
   target: {
     type: String,
     required: [true, `${Field.Target}|${Message.IsRequired}`],
-    minlength: [3, `${Field.Target}|${Message.BelowMinLength}`],
-    maxlength: [30, `${Field.Target}|${Message.ExceededMaxLength}`],
+    minlength: [REGISTER_OPTION_MIN_LENGTH, `${Field.Target}|${Message.BelowMinLength}`],
+    maxlength: [REGISTER_OPTION_MAX_LENGTH, `${Field.Target}|${Message.ExceededMaxLength}`],
   },
   timestamp: { type: Date, required: [true, `${Field.Timestamp}|${Message.IsRequired}`], default: Date.now },
-  type: { type: String, maxlength: [30, `${Field.Type}|${Message.ExceededMaxLength}`] },
+  type: { type: String, maxlength: [REGISTER_OPTION_MAX_LENGTH, `${Field.Type}|${Message.ExceededMaxLength}`] },
   value: {
     type: Number,
     required: [true, `${Field.Value}|${Message.IsRequired}`],
