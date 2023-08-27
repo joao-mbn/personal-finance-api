@@ -43,7 +43,7 @@ export async function getUserById(id: string, shouldThrow = false) {
   const user = await User.findById<IUser>(id);
 
   if (!user && shouldThrow) {
-    const error = new ErrorObject(404, Message.UserNotFound, true);
+    const error = new ErrorObject(404, Message.userNotFound, true);
     throw error;
   }
 
@@ -52,7 +52,7 @@ export async function getUserById(id: string, shouldThrow = false) {
 
 export function getUserFromRequest(request: Request<unknown, unknown, unknown, unknown>) {
   const { user } = request;
-  if (!user) throw new ErrorObject(404, Message.UserNotFound);
+  if (!user) throw new ErrorObject(404, Message.userNotFound);
 
   return user;
 }

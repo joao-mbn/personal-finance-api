@@ -22,5 +22,5 @@ export async function errorHandler(error: unknown, _: Request, response: Respons
     }
   }
 
-  return response.status(500).send(Message.AnErrorOccurred);
+  return response.status(500).send(Message.anErrorOccurred);
 }

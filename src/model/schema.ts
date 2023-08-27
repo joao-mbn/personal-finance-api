@@ -15,21 +15,39 @@ const REGISTER_OPTION_MAX_LENGTH = 30;
 const REGISTER_COMMENT_MAX_LENGTH = 200;
 
 const entrySchema = new Schema<IEntry>({
-  comments: { type: String, maxlength: [REGISTER_COMMENT_MAX_LENGTH, `${Field.Comment}|${Message.ExceededMaxLength}`] },
+  comments: {
+    type: String,
+    maxlength: [
+      REGISTER_COMMENT_MAX_LENGTH,
+      `${Message.exceededMaxLength}|field:${Field.comment}|length:${REGISTER_COMMENT_MAX_LENGTH}`,
+    ],
+  },
   target: {
     type: String,
-    required: [true, `${Field.Target}|${Message.IsRequired}`],
-    minlength: [REGISTER_OPTION_MIN_LENGTH, `${Field.Target}|${Message.BelowMinLength}`],
-    maxlength: [REGISTER_OPTION_MAX_LENGTH, `${Field.Target}|${Message.ExceededMaxLength}`],
+    required: [true, `${Message.isRequired}|field:${Field.target}`],
+    minlength: [
+      REGISTER_OPTION_MIN_LENGTH,
+      `${Message.belowMinLength}|field:${Field.target}|length:${REGISTER_OPTION_MIN_LENGTH}`,
+    ],
+    maxlength: [
+      REGISTER_OPTION_MAX_LENGTH,
+      `${Message.exceededMaxLength}|field:${Field.target}|length:${REGISTER_OPTION_MAX_LENGTH}`,
+    ],
   },
-  timestamp: { type: Date, required: [true, `${Field.Timestamp}|${Message.IsRequired}`], default: Date.now },
-  type: { type: String, maxlength: [REGISTER_OPTION_MAX_LENGTH, `${Field.Type}|${Message.ExceededMaxLength}`] },
+  timestamp: { type: Date, required: [true, `${Message.isRequired}|field:${Field.timestamp}`], default: Date.now },
+  type: {
+    type: String,
+    maxlength: [
+      REGISTER_OPTION_MAX_LENGTH,
+      `${Message.exceededMaxLength}|field:${Field.type}|length:${REGISTER_OPTION_MAX_LENGTH}`,
+    ],
+  },
   value: {
     type: Number,
-    required: [true, `${Field.Value}|${Message.IsRequired}`],
+    required: [true, `${Message.isRequired}|field:${Field.value}`],
     validate: {
       validator: (value: number) => value !== 0,
-      message: `${Field.Value}|${Message.CannotBeNullOrZero}`,
+      message: `${Message.cannotBeNullOrZero}|field:${Field.value}`,
     },
   },
 });

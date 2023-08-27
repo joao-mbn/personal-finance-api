@@ -14,13 +14,13 @@ export async function sessionValidator(request: Request, _: Response, next: Next
   const sessionId = parseCookieString(request.headers.cookie)['sessionId'] as string;
 
   if (!sessionId) {
-    const error = new ErrorObject(401, Message.NoSessionId);
+    const error = new ErrorObject(401, Message.noSessionId);
     return next(error);
   }
 
   const user = await getUserBySessionId(sessionId);
   if (!user) {
-    const error = new ErrorObject(404, Message.InvalidSessionId);
+    const error = new ErrorObject(404, Message.invalidSessionId);
     return next(error);
   }
 
@@ -34,7 +34,7 @@ export async function sessionValidator(request: Request, _: Response, next: Next
   }
 
   if (!refreshToken) {
-    const error = new ErrorObject(400, Message.SessionExpired);
+    const error = new ErrorObject(400, Message.sessionExpired);
     return next(error);
   }
 

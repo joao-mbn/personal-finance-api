@@ -26,7 +26,7 @@ export async function refreshSessionWithGoogle(code: string, sessionId: string) 
   const { id_token } = tokens;
 
   if (!id_token) {
-    const error = new ErrorObject(400, Message.NoIdToken, true);
+    const error = new ErrorObject(400, Message.noIdToken, true);
     throw error;
   }
 
@@ -34,7 +34,7 @@ export async function refreshSessionWithGoogle(code: string, sessionId: string) 
   const payload = ticket.getPayload();
 
   if (!payload) {
-    const error = new ErrorObject(400, Message.TokenWithoutInfo, true);
+    const error = new ErrorObject(400, Message.tokenWithoutInfo, true);
     throw error;
   }
 

@@ -47,7 +47,7 @@ export async function createOne(entry: IEntry, userId: string) {
   });
 
   if (newEntryArray?.[0] == null) {
-    const error = new ErrorObject(500, Message.EntryWasNotCreated);
+    const error = new ErrorObject(500, Message.entryWasNotCreated);
     throw error;
   }
   const { _id, ...rest } = newEntryArray[0].toObject();
@@ -56,7 +56,7 @@ export async function createOne(entry: IEntry, userId: string) {
   const { modifiedCount } = await User.updateOne({ _id: _userId }, { $push: { entries: _id } });
 
   if (modifiedCount === 0) {
-    const error = new ErrorObject(500, Message.EntryWasNotAssociated);
+    const error = new ErrorObject(500, Message.entryWasNotAssociated);
     throw error;
   }
 
@@ -75,7 +75,7 @@ export async function updateOne(entry: WithRequired<IEntry, 'id'>, userId: strin
   });
 
   if (newEntry == null) {
-    const error = new ErrorObject(500, Message.EntryWasNotUpdated);
+    const error = new ErrorObject(500, Message.entryWasNotUpdated);
     throw error;
   }
 
@@ -91,7 +91,7 @@ export async function deleteOne(entryId: string, userId: string) {
 
   const { deletedCount } = await Entry.deleteOne({ _id: _entryId });
   if (deletedCount === 0) {
-    const error = new ErrorObject(500, Message.EntryWasNotDeleted);
+    const error = new ErrorObject(500, Message.entryWasNotDeleted);
     throw error;
   }
 
@@ -112,7 +112,7 @@ async function ensureEntryBelongsToUser(entryId: string | ObjectId, userId: stri
   )[0]?.hasEntry;
 
   if (!entryBelongsToUser) {
-    const error = new ErrorObject(401, Message.EditingNotAllowedEntry);
+    const error = new ErrorObject(401, Message.editingNotAllowedEntry);
     throw error;
   }
 }
